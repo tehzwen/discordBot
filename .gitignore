@@ -6,3 +6,6 @@ gifyCatData.txt
 mapsDataKeys.txt
 databaseKeys.txt
 redditData.txt
+secrets.json
+__pycache__
+lib

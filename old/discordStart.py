@@ -19,24 +19,26 @@ from slots import *
 
 client = discord.Client()
 #bot_prefix = "?"
-yTube = Player() #creating a Player object to hold values for player
+yTube = Player()  # creating a Player object to hold values for player
 dataBaseInfo = open_file('databaseKeys.txt')
 password = dataBaseInfo[0]
 print(password)
 
 
-cnx = pymysql.connect(db= 'discordBot',user='zach', passwd=str(password), host='127.0.0.1')
-#cnx = pymysql.connect(db= ,user=user, passwd=passwd, host=host)
+cnx = pymysql.connect(db='discordBot', user='zach',
+                      passwd=str(password), host='127.0.0.1')
+# cnx = pymysql.connect(db= ,user=user, passwd=passwd, host=host)
 d1 = dataSet(cnx)
 #client = commands.Bot(command_prefix = bot_prefix)
+
 
 @client.event
 async def on_ready():
     count = False
     print("Bot Online!")
-    print("Name: ",client.user.name)
-    game = discord.Game(name = "learning from Skynet")
-    await client.change_presence(game = game)
+    print("Name: ", client.user.name)
+    game = discord.Game(name="learning from Skynet")
+    await client.change_presence(game=game)
     for server in client.servers:
         for member in server.members:
             yTube.userList.append(member)
@@ -48,19 +50,19 @@ async def on_ready():
                 await client.send_message(channel, "$commands")
                 count = True
                 break
-    
+
+
 @client.event
 async def on_member_join(member):
     addnewUser(d1, str(member))
 
 
-
 @client.event
 async def on_message(message):
-###################################################################################
+    ###################################################################################
     if message.content.startswith('$greet'):
         await client.send_message(message.channel, 'Say hello')
-        msg = await client.wait_for_message(author = message.author, content ='hello')
+        msg = await client.wait_for_message(author=message.author, content='hello')
         await client.send_message(message.channel, 'Hey')
 
 ###################################################################################
@@ -71,7 +73,7 @@ async def on_message(message):
 
     elif message.content.startswith('$commands'):
         await client.send_message(message.channel, "List of all Commands:\n$greet (simple greeting message)\n$info (self explanatory)\n$commands(list of all the commands)\n$joke (haha) \n$trivia (try your best)\n$TTS (get me to use my beautiful voice)\n$song (search youtube for top result and play it in voice chat)\n$gif(search for a gif)\n$video (search youtube for a video)\n$gamble (you feeling lucky boy?)\n$blackjack\n$maps(search a location)\n$points\n$standings")
-################################################################################### 
+###################################################################################
 
     elif message.content.startswith('$intro'):
         await client.send_message(message.channel, "I'm the beginning of a discord bot written by Zwen to screw around and hopefully become self awar- I mean become intelligent")
@@ -89,8 +91,8 @@ async def on_message(message):
         for i in range(len(answerList)):
             await client.send_message(message.channel, optionsList[i] + ": " + answerList[i])
 
-        msg = await client.wait_for_message(author = message.author)
-        answer = msg.content.upper() #make their entry uppercase no matter what
+        msg = await client.wait_for_message(author=message.author)
+        answer = msg.content.upper()  # make their entry uppercase no matter what
 
         correctBool = False
         for i in range(len(optionsList)):
@@ -100,30 +102,31 @@ async def on_message(message):
                 await client.send_message(message.channel, "Correct! You got 10 points!")
                 editPoints(d1.cnx, 10, str(message.author))
                 correctBool = True
-            
+
         if not correctBool:
-            await client.send_message(message.channel, "Incorrect, the correct answer was: " + correctChar +' '+ correct)
+            await client.send_message(message.channel, "Incorrect, the correct answer was: " + correctChar + ' ' + correct)
 ###########################################################################################################
 
     elif message.content.startswith('$TTS'):
         newMsg = message.content.replace('$TTS ', '')
         if newMsg == '$TTS':
-            await client.send_message(message.channel, "you're a dick, im not going into an infinite loop", tts = True)
+            await client.send_message(message.channel, "you're a dick, im not going into an infinite loop", tts=True)
 
         else:
-            await client.send_message(message.channel, newMsg, tts = True)
+            await client.send_message(message.channel, newMsg, tts=True)
 
 ###########################################################################################################
-    
+
     elif message.content.startswith('$song'):
         newMsg = message.content.replace('$song ', '')
-        
+
         count = False
         if not client.is_voice_connected(message.server):
 
             for server in client.servers:
                 for channel in server.channels:
-                    if channel.name == "General" and count == False: #can replace "General" with your desired voice channel here
+                    # can replace "General" with your desired voice channel here
+                    if channel.name == "General" and count == False:
                         voiceChan = channel
                         count = True
                         break
@@ -134,7 +137,7 @@ async def on_message(message):
         else:
             print("already in channel")
             yTube.player.stop()
-        
+
         songToPlay, songDesc = youtube_search(newMsg)
 
         if songToPlay == None:
@@ -144,11 +147,11 @@ async def on_message(message):
         voice = yTube.getVoice()
         yTube.player = await voice.create_ytdl_player(songToPlay)
         yTube.player.volume = 0.75
-        yTube.player.start() 
+        yTube.player.start()
         playing = True
         muted = False
 
-        #handling commands once the audio is playing
+        # handling commands once the audio is playing
         while playing:
             msg = await client.wait_for_message()
 
@@ -156,19 +159,16 @@ async def on_message(message):
                 playing = False
                 yTube.player.stop()
                 await voice.disconnect()
-            
+
             elif msg.content == '$volumeup':
 
                 if yTube.player.volume >= 0 and yTube.player.volume < 2.0:
                     yTube.player.volume += 0.25
 
-
             elif msg.content == '$volumedown':
-                
 
                 if yTube.player.volume > 0 and yTube.player.volume <= 2.0:
                     yTube.player.volume += -0.25
-                
 
             elif msg.content.startswith('$mute'):
 
@@ -176,7 +176,7 @@ async def on_message(message):
                     yTube.volume = yTube.player.volume
                     yTube.player.volume = 0.0
                     muted = True
-                
+
                 else:
                     yTube.player.volume = yTube.volume
                     muted = False
@@ -187,8 +187,7 @@ async def on_message(message):
             elif msg.content.startswith('$play'):
                 yTube.player.resume()
 
-            
-            
+
 ###########################################################################################################
 
     elif message.content.startswith('$gif'):
@@ -215,7 +214,7 @@ async def on_message(message):
     elif message.content.startswith('$points'):
         author = str(message.author)
         points = getPoints(d1.cnx, author)
-        await client.send_message(message.channel, "You currently have "+ str(points) +" points.")
+        await client.send_message(message.channel, "You currently have " + str(points) + " points.")
 
 ###########################################################################################################
 
@@ -225,21 +224,21 @@ async def on_message(message):
         win = gambleFunc(currentPoints, int(newMsg))
 
         if win:
-            await client.send_message(message.channel, "You won "+ str(newMsg) +" points.")
+            await client.send_message(message.channel, "You won " + str(newMsg) + " points.")
             editPoints(d1.cnx, int(newMsg), str(message.author))
 
         elif win == None:
             await client.send_message(message.channel, "You don't have enough points to gamble " + str(newMsg))
-        
+
         elif win == False:
-            await client.send_message(message.channel, "You lost "+ str(newMsg) +" points.")
+            await client.send_message(message.channel, "You lost " + str(newMsg) + " points.")
             editPoints(d1.cnx, -(int(newMsg)), str(message.author))
-            
+
 ###########################################################################################################
     elif message.content.startswith('$blackjack'):
         newMsg = message.content.replace('$blackjack ', '')
         currentPoints = getPoints(d1.cnx, str(message.author))
-    
+
         if newMsg == '$blackjack' or (int(newMsg)) < 0:
             await client.send_message(message.channel, "Need to enter a valid bet amount (ie. $blackjack 50).")
             return
@@ -250,29 +249,24 @@ async def on_message(message):
 
         await client.send_message(message.channel, "Okay, the goal is to not go over 21, you can use $hitme, $stay to play the game and make points.")
 
-    
         b1 = blackJack()
         b1.shuffle()
         win = None
         done = False
 
         dealerFirst = b1.deal()
-        await client.send_message(message.channel, "Dealer has " + str(dealerFirst)+ " and 1 card facedown.")
+        await client.send_message(message.channel, "Dealer has " + str(dealerFirst) + " and 1 card facedown.")
         dealerTotal = b1.deal()
         b1.reset_value()
-        
+
         while not done:
 
-            msg = await client.wait_for_message(author = message.author)
-            
-
-            
+            msg = await client.wait_for_message(author=message.author)
 
             if msg.content.startswith('$hitme'):
                 b1.deal()
                 win = b1.checkStatus()
-                
-            
+
                 if win:
                     newVal = (int(newMsg)) * 3
                     await client.send_message(message.channel, "BLACKJACK! You won " + str(newVal)+" points.")
@@ -293,13 +287,13 @@ async def on_message(message):
                     editPoints(d1.cnx, -(int(newMsg)), str(msg.author))
                     editPoints(d1.cnx, (int(newMsg)), 'zwenBot#0844')
                     done = True
-                
+
                 elif b1.currentVal == dealerTotal:
                     await client.send_message(message.channel, "Dealer reveals facedown card and has a total of " + str(dealerTotal)+"."+" DRAW! Points returned.")
                     done = True
-                
+
                 elif b1.currentVal > dealerTotal:
-                    await client.send_message(message.channel, "Dealer reveals facedown card and has a total of " + str(dealerTotal)+"."+" YOU WIN! You won " + newMsg +" points.")
+                    await client.send_message(message.channel, "Dealer reveals facedown card and has a total of " + str(dealerTotal)+"."+" YOU WIN! You won " + newMsg + " points.")
                     editPoints(d1.cnx, int(newMsg), str(msg.author))
                     done = True
 
@@ -326,7 +320,7 @@ async def on_message(message):
 
     elif message.content.startswith('$maps'):
         await client.send_message(message.channel, "Where would you like the address to?")
-        msg = await client.wait_for_message(author = message.author)
+        msg = await client.wait_for_message(author=message.author)
         address, map_location = addressLookup(msg.content)
 
         if address == None:
@@ -385,14 +379,9 @@ async def on_message(message):
             for i in range(3):
                 await client.send_message(message.channel, column[i])
 
-        
-
-
 
 keys = open_file('keys.txt')
 
 client.run(keys[0])
 
 cnx.close()
-
-
